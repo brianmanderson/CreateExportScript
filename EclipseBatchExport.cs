@@ -9,7 +9,7 @@ using System.IO;
 using System.Windows.Forms;
 
 // TODO: Replace the following version attributes by creating AssemblyInfo.cs. You can do this in the properties of the Visual Studio project.
-[assembly: AssemblyVersion("1.0.0.1")]
+[assembly: AssemblyVersion("1.0.0.3")]
 [assembly: AssemblyFileVersion("1.0.0.1")]
 [assembly: AssemblyInformationalVersion("1.0")]
 
@@ -41,7 +41,7 @@ namespace EclipseBatchExport
             string dcmType = "";
             string uidIn = "";
             string listPath = "";
-            string logPath = @"O:\exportDicomTest";
+            string logPath = @"\\ucsdhc-varis2\radonc$\BMAnderson\exportDicomTest";
             string filePath = Path.Combine(logPath, "DICOM_ServiceLog_" + DateTime.Now.Date.ToShortDateString().Replace('/', '_') + ".txt");
             string Message;
             List<string[]> lines = new List<string[]>();
@@ -89,8 +89,15 @@ namespace EclipseBatchExport
             foreach(string[] str in lines)
             {
                 Patient patient = app.OpenPatientById(str[0]);
-                string planName = str[1];
-                WriteTxtFile(patient,planName,logPath);
+                if (str.Length == 2)
+                {
+                    string planName = str[1];
+                    WriteTxtFile(patient, planName, logPath);
+                }
+                else
+                {
+                    WriteTxtFileAllApprovedPlans(patient, logPath);
+                }
                 app.ClosePatient();
             }
         }
@@ -127,7 +134,10 @@ namespace EclipseBatchExport
                 string expInstructions = string.Format("ExportInstructions.txt");
                 string exportFile = System.IO.Path.Combine(logPath, expInstructions);
 
-
+                if (planSetup.StructureSet is null)
+                {
+                    continue; // Could be an electron plan with no structure set or imaging, in which case, move on
+                }
                 //finding UID
                 string[] uids = { planSetup.UID.ToString(), planSetup.StructureSet.UID, planSetup.Dose.UID, planSetup.StructureSet.Image.Series.UID };
 
