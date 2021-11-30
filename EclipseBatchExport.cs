@@ -103,7 +103,7 @@ namespace EclipseBatchExport
             List<PlanSetup> tmpplanSetups = new List<PlanSetup>();
             List<PlanSetup> planSetups = new List<PlanSetup>();
 
-            List<Course> target_Courses = new List<Course>();
+            Course targetCourse = null;
             courses = patient.Courses.ToList();
             foreach(Course c in courses)
             {
@@ -113,12 +113,13 @@ namespace EclipseBatchExport
                     //MessageBox.Show(p.ApprovalStatus.ToString());
                     if (p.Id == planName && p.ApprovalStatus.ToString() == "TreatmentApproved")
                     {
+                        targetCourse = c;
                         target_Courses.Add(c);
                     }
                 }
 
             }
-            foreach (Course targetCourse in target_Courses)
+            if (targetCourse != null)
             {
                 planSetups = courses.FirstOrDefault(x => x.Id == targetCourse.Id).PlanSetups.ToList();
                 string expInstructions = string.Format("ExportInstructions.txt");
