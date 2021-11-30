@@ -114,7 +114,6 @@ namespace EclipseBatchExport
                     if (p.Id == planName && p.ApprovalStatus.ToString() == "TreatmentApproved")
                     {
                         targetCourse = c;
-                        target_Courses.Add(c);
                     }
                 }
 
