@@ -94,7 +94,66 @@ namespace EclipseBatchExport
                 app.ClosePatient();
             }
         }
+        public static void WriteTxtFileAllApprovedPlans(Patient patient, string logPath)
+        {
+            List<Course> courses = new List<Course>();
 
+            List<PlanSetup> tmpplanSetups = new List<PlanSetup>();
+            List<string> planNames = new List<string>();
+            List<PlanSetup> planSetups = new List<PlanSetup>();
+            List<Course> targetCourses = new List<Course>();
+            Course targetCourse;
+            PlanSetup planSetup;
+            courses = patient.Courses.ToList();
+            foreach (Course c in courses)
+            {
+                tmpplanSetups = c.PlanSetups.ToList();
+                foreach (PlanSetup p in tmpplanSetups)
+                {
+                    //MessageBox.Show(p.ApprovalStatus.ToString());
+                    if (p.ApprovalStatus.ToString() == "TreatmentApproved")
+                    {
+                        targetCourses.Add(c);
+                        planNames.Add(p.Id);
+                    }
+                }
+
+            }
+            for (int i = 0; i < targetCourses.Count; i++)
+            {
+                targetCourse = targetCourses[i];
+                planSetups = targetCourse.PlanSetups.ToList();
+                planSetup = planSetups.FirstOrDefault(x => x.Id == planNames[i]);
+                string expInstructions = string.Format("ExportInstructions.txt");
+                string exportFile = System.IO.Path.Combine(logPath, expInstructions);
+
+
+                //finding UID
+                string[] uids = { planSetup.UID.ToString(), planSetup.StructureSet.UID, planSetup.Dose.UID, planSetup.StructureSet.Image.Series.UID };
+
+
+                if (!Directory.Exists(logPath))
+                {
+                    Directory.CreateDirectory(logPath);
+                }
+
+                if (!File.Exists(exportFile))
+                {
+                    // Create a file to write to.   
+                    using (StreamWriter exportWriter = File.CreateText(exportFile))
+                    {
+                        exportWriter.WriteLine($"{patient.Id},{uids[0]},{uids[1]},{uids[2]},{uids[3]}");
+                    }
+                }
+                else
+                {
+                    using (StreamWriter exportWriter = File.AppendText(exportFile))
+                    {
+                        exportWriter.WriteLine($"{patient.Id},{uids[0]},{uids[1]},{uids[2]},{uids[3]}");
+                    }
+                }
+            }
+        }
 
         public static void WriteTxtFile(Patient patient, string planName,string logPath)
         {
@@ -104,6 +163,7 @@ namespace EclipseBatchExport
             List<PlanSetup> planSetups = new List<PlanSetup>();
 
             Course targetCourse = null;
+            PlanSetup planSetup;
             courses = patient.Courses.ToList();
             foreach(Course c in courses)
             {
@@ -120,13 +180,13 @@ namespace EclipseBatchExport
             }
             if (targetCourse != null)
             {
-                planSetups = courses.FirstOrDefault(x => x.Id == targetCourse.Id).PlanSetups.ToList();
+                planSetups = targetCourse.PlanSetups.ToList();
                 string expInstructions = string.Format("ExportInstructions.txt");
                 string exportFile = System.IO.Path.Combine(logPath, expInstructions);
-
+                planSetup = planSetups.FirstOrDefault(x => x.Id == planName);
 
                 //finding UID
-                string[] uids = { planSetups.FirstOrDefault(x => x.Id == planName).UID.ToString(), planSetups.FirstOrDefault(x => x.Id == planName).StructureSet.UID, planSetups.FirstOrDefault(x => x.Id == planName).Dose.UID, planSetups.FirstOrDefault(x => x.Id == planName).StructureSet.Image.Series.UID };
+                string[] uids = { planSetup.UID.ToString(), planSetup.StructureSet.UID, planSetup.Dose.UID, planSetup.StructureSet.Image.Series.UID };
 
 
                 if (!Directory.Exists(logPath))
